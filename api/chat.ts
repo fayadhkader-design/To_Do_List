@@ -1,5 +1,4 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { createClient } from '@supabase/supabase-js'
 
 interface ChatMessage {
   role: 'user' | 'assistant'
@@ -104,12 +103,16 @@ export default async function handler(request: VercelRequest, response: VercelRe
   const token = authorization?.startsWith('Bearer ') ? authorization.slice(7) : ''
   if (!token) return response.status(401).json({ error: 'Please sign in again.' })
 
-  const supabase = createClient(supabaseUrl, supabaseKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
+  const userResponse = await fetch(`${supabaseUrl}/auth/v1/user`, {
+    headers: {
+      apikey: supabaseKey,
+      Authorization: `Bearer ${token}`,
+    },
   })
-  const { data, error: authError } = await supabase.auth.getUser(token)
-  if (authError || !data.user) return response.status(401).json({ error: 'Your session has expired. Please sign in again.' })
-  if (!allowRequest(data.user.id)) {
+  if (!userResponse.ok) return response.status(401).json({ error: 'Your session has expired. Please sign in again.' })
+  const user = await userResponse.json() as { id?: string }
+  if (!user.id) return response.status(401).json({ error: 'Your session has expired. Please sign in again.' })
+  if (!allowRequest(user.id)) {
     return response.status(429).json({ error: 'You have reached the hourly chat limit. Please try again later.' })
   }
 
