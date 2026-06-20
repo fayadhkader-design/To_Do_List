@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Priority, Task, TaskDraft } from '../types'
 import { formatLongDate } from '../utils/calendar'
 
@@ -16,12 +16,19 @@ const EMPTY_DRAFT = { title: '', notes: '', priority: 'medium' as Priority, cate
 export function TaskForm({ selectedDate, editingTask, categories, onManageCategories, onSubmit, onCancel }: TaskFormProps) {
   const [draft, setDraft] = useState<TaskDraft>({ ...EMPTY_DRAFT, dueDate: selectedDate })
   const [error, setError] = useState('')
+  const titleInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     setDraft(editingTask
       ? { title: editingTask.title, notes: editingTask.notes, dueDate: editingTask.dueDate, priority: editingTask.priority, category: editingTask.category }
       : { ...EMPTY_DRAFT, dueDate: selectedDate })
     setError('')
+    if (editingTask) {
+      window.requestAnimationFrame(() => {
+        titleInputRef.current?.focus({ preventScroll: true })
+        titleInputRef.current?.select()
+      })
+    }
   }, [editingTask, selectedDate])
 
   function handleSubmit(event: React.FormEvent) {
@@ -40,7 +47,7 @@ export function TaskForm({ selectedDate, editingTask, categories, onManageCatego
   }
 
   return (
-    <form className="task-form" onSubmit={handleSubmit}>
+    <form id="task-editor" className={`task-form ${editingTask ? 'editing' : ''}`} onSubmit={handleSubmit}>
       <div className="form-title-row">
         <div>
           <p className="eyebrow">{editingTask ? 'Pencil it in again' : 'Add to the day'}</p>
@@ -52,6 +59,7 @@ export function TaskForm({ selectedDate, editingTask, categories, onManageCatego
       <label>
         What needs doing?
         <input
+          ref={titleInputRef}
           autoComplete="off"
           value={draft.title}
           onChange={(event) => setDraft({ ...draft, title: event.target.value })}

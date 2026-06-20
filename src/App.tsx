@@ -127,6 +127,16 @@ export default function App() {
     setEditingTask(null)
   }
 
+  function beginEditingTask(task: Task) {
+    setEditingTask(task)
+    window.requestAnimationFrame(() => {
+      document.getElementById('task-editor')?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      })
+    })
+  }
+
   async function submitTask(draft: TaskDraft) {
     if (!session?.user) return
     setCloudError('')
@@ -268,7 +278,7 @@ export default function App() {
                   setCloudError(error instanceof Error ? error.message : 'Could not update this task.')
                 }
               }}
-              onEdit={setEditingTask}
+              onEdit={beginEditingTask}
               onDelete={async (id) => {
                 try {
                   await deleteTask(id)

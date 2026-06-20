@@ -135,6 +135,8 @@ h1 em { color: var(--carolina); font-style: italic; }
 
 .task-form { position: relative; padding: 28px; transform: rotate(.35deg); }
 .task-form::before { content: ''; position: absolute; left: 18px; right: 18px; top: -7px; height: 14px; background: rgba(86,160,210,.2); transform: rotate(-1deg); }
+.task-form.editing { border-color: var(--carolina); box-shadow: 0 16px 42px rgba(19,41,75,.1), 0 0 0 3px rgba(86,160,210,.18); }
+.task-form.editing::before { background: rgba(86,160,210,.55); }
 .paperclip { font-size: 38px; color: var(--carolina); transform: rotate(25deg); }
 .task-form h3 { font-size: 27px; }
 .task-form label { display: block; margin-top: 20px; color: var(--navy); font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
