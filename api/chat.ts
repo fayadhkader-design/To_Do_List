@@ -92,7 +92,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
 
   const messages = cleanMessages(request.body?.messages)
   const tasks = cleanTasks(request.body?.tasks)
-  if (!messages.length || messages.at(-1)?.role !== 'user') {
+  if (!messages.length || messages[messages.length - 1]?.role !== 'user') {
     return response.status(400).json({ error: 'Ask the planner a question first.' })
   }
 
