@@ -15,6 +15,18 @@ interface PlannerTask {
   completed: boolean
 }
 
+interface OpenAIResponse {
+  output_text?: string
+  output?: Array<{
+    type?: string
+    content?: Array<{
+      type?: string
+      text?: string
+    }>
+  }>
+  error?: { message?: string }
+}
+
 const requestsByUser = new Map<string, { count: number; resetAt: number }>()
 const MAX_REQUESTS_PER_HOUR = 30
 
@@ -62,6 +74,17 @@ function cleanTasks(value: unknown): PlannerTask[] {
       completed: task.completed,
     }]
   })
+}
+
+function extractOutputText(result: OpenAIResponse): string {
+  if (result.output_text?.trim()) return result.output_text.trim()
+  return (result.output ?? [])
+    .flatMap((item) => item.type === 'message' ? item.content ?? [] : [])
+    .filter((content) => content.type === 'output_text' && typeof content.text === 'string')
+    .map((content) => content.text?.trim())
+    .filter((text): text is string => Boolean(text))
+    .join('\n')
+    .trim()
 }
 
 export default async function handler(request: VercelRequest, response: VercelResponse) {
@@ -127,15 +150,17 @@ ${taskContext}`,
       }),
     })
 
-    const result = await openAIResponse.json() as {
-      output_text?: string
-      error?: { message?: string }
-    }
+    const result = await openAIResponse.json() as OpenAIResponse
     if (!openAIResponse.ok) {
       console.error('OpenAI API error:', result.error?.message)
       return response.status(502).json({ error: 'The planning assistant is having trouble answering right now.' })
     }
-    return response.status(200).json({ message: result.output_text?.trim() || 'I could not form an answer. Please try asking another way.' })
+    const answer = extractOutputText(result)
+    if (!answer) {
+      console.error('OpenAI response contained no text output.')
+      return response.status(502).json({ error: 'The planning assistant received an empty answer. Please try again.' })
+    }
+    return response.status(200).json({ message: answer })
   } catch (error) {
     console.error('Chat function error:', error)
     return response.status(500).json({ error: 'The planning assistant could not be reached.' })
