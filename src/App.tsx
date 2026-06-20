@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { AuthScreen } from './components/AuthScreen'
 import { Calendar } from './components/Calendar'
+import { PlannerChat } from './components/PlannerChat'
 import { TaskForm } from './components/TaskForm'
 import { TaskList } from './components/TaskList'
 import { supabase } from './lib/supabase'
@@ -228,6 +229,7 @@ export default function App() {
       </main>
 
       <footer><span>Made for full days &amp; blue skies.</span><span>Chapel Hill, North Carolina</span></footer>
+      <PlannerChat session={session} tasks={tasks} />
     </div>
   )
 }

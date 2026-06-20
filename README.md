@@ -30,3 +30,7 @@ The compiled site is written to `dist/`. Signed-in users' tasks are saved secure
    - Local: `http://127.0.0.1:5173`
 
 Authentication and row-level security ensure each signed-in user can access only their own tasks.
+
+## AI planning companion
+
+The assistant runs through the private Vercel function at `api/chat.ts`. Add `OPENAI_API_KEY` as a sensitive Vercel environment variable; never prefix it with `VITE_` or commit it to Git. The function verifies the user's Supabase session, sends only task details needed for planning, limits message size, and caps each user at 30 requests per hour per running function instance.
