@@ -85,4 +85,12 @@ export function saveTasks(tasks: Task[]): void {
   }
 }
 
+export function clearLocalTasks(): void {
+  try {
+    localStorage.removeItem(STORAGE_KEY)
+  } catch {
+    // Ignore storage restrictions.
+  }
+}
+
 export { STORAGE_KEY }
