@@ -83,6 +83,14 @@ export async function deleteTask(id: string): Promise<void> {
   if (error) throw error
 }
 
+export async function replaceTaskCategory(oldName: string, newName: string): Promise<void> {
+  const { error } = await supabase
+    .from('tasks')
+    .update({ category: newName, updated_at: new Date().toISOString() })
+    .eq('category', oldName)
+  if (error) throw error
+}
+
 export async function importTasks(user: User, tasks: Task[]): Promise<Task[]> {
   if (!tasks.length) return []
   const { data, error } = await supabase

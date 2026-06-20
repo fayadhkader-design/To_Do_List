@@ -5,13 +5,15 @@ import { formatLongDate } from '../utils/calendar'
 interface TaskFormProps {
   selectedDate: string
   editingTask: Task | null
+  categories: string[]
+  onManageCategories: () => void
   onSubmit: (draft: TaskDraft) => void
   onCancel: () => void
 }
 
 const EMPTY_DRAFT = { title: '', notes: '', priority: 'medium' as Priority, category: 'Personal' }
 
-export function TaskForm({ selectedDate, editingTask, onSubmit, onCancel }: TaskFormProps) {
+export function TaskForm({ selectedDate, editingTask, categories, onManageCategories, onSubmit, onCancel }: TaskFormProps) {
   const [draft, setDraft] = useState<TaskDraft>({ ...EMPTY_DRAFT, dueDate: selectedDate })
   const [error, setError] = useState('')
 
@@ -83,20 +85,13 @@ export function TaskForm({ selectedDate, editingTask, onSubmit, onCancel }: Task
       </div>
 
       <label>
-        Category
-        <input
-          list="category-suggestions"
+        <span className="category-label-row"><span>Category</span><button type="button" onClick={onManageCategories}>Manage categories</button></span>
+        <select
           value={draft.category}
           onChange={(event) => setDraft({ ...draft, category: event.target.value })}
-          placeholder="Personal"
-        />
-        <datalist id="category-suggestions">
-          <option value="Study" />
-          <option value="Campus" />
-          <option value="Personal" />
-          <option value="Work" />
-          <option value="Wellness" />
-        </datalist>
+        >
+          {categories.map((category) => <option key={category} value={category}>{category}</option>)}
+        </select>
       </label>
 
       {error && <p className="form-error" role="alert">{error}</p>}

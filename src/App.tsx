@@ -2,11 +2,13 @@ import { useEffect, useMemo, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { AuthScreen } from './components/AuthScreen'
 import { Calendar } from './components/Calendar'
+import { CategoryManager } from './components/CategoryManager'
 import { PlannerChat } from './components/PlannerChat'
 import { TaskForm } from './components/TaskForm'
 import { TaskList } from './components/TaskList'
 import { supabase } from './lib/supabase'
-import { createTask, deleteTask, fetchTasks, importTasks, updateTask } from './services/tasks'
+import { categoriesFromUser, DEFAULT_CATEGORY, normalizeCategories, saveCategories } from './services/categories'
+import { createTask, deleteTask, fetchTasks, importTasks, replaceTaskCategory, updateTask } from './services/tasks'
 import type { Priority, Task, TaskDraft, TaskStatusFilter } from './types'
 import { fromDateKey, toDateKey } from './utils/calendar'
 import { clearLocalTasks, loadTasks } from './utils/storage'
@@ -28,6 +30,9 @@ export default function App() {
   const [statusFilter, setStatusFilter] = useState<TaskStatusFilter>('all')
   const [priorityFilter, setPriorityFilter] = useState<Priority | 'all'>('all')
   const [categoryFilter, setCategoryFilter] = useState('all')
+  const [categories, setCategories] = useState<string[]>([DEFAULT_CATEGORY])
+  const [categoryManagerOpen, setCategoryManagerOpen] = useState(false)
+  const [categoryBusy, setCategoryBusy] = useState(false)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -53,6 +58,14 @@ export default function App() {
     fetchTasks()
       .then((cloudTasks) => {
         setTasks(cloudTasks)
+        const userCategories = categoriesFromUser(session.user)
+        const mergedCategories = normalizeCategories([...userCategories, ...cloudTasks.map((task) => task.category)])
+        setCategories(mergedCategories)
+        if (mergedCategories.join('\0') !== userCategories.join('\0')) {
+          saveCategories(mergedCategories).catch(() => {
+            // Existing task categories still remain usable if metadata syncing fails.
+          })
+        }
         setShowImport(cloudTasks.length === 0 && localTasks.length > 0)
       })
       .catch((error: Error) => setCloudError(
@@ -67,8 +80,43 @@ export default function App() {
     .filter((task) => task.dueDate === selectedDate)
     .sort((a, b) => Number(a.completed) - Number(b.completed) || ({ high: 0, medium: 1, low: 2 }[a.priority] - { high: 0, medium: 1, low: 2 }[b.priority]))
 
-  const categories = Array.from(new Set(tasks.map((task) => task.category))).sort()
   const completedThisMonth = tasks.filter((task) => task.completed && task.dueDate.startsWith(`${visibleMonth.getFullYear()}-${String(visibleMonth.getMonth() + 1).padStart(2, '0')}`)).length
+
+  async function addCategory(name: string) {
+    setCategoryBusy(true)
+    try {
+      setCategories(await saveCategories([...categories, name]))
+    } finally {
+      setCategoryBusy(false)
+    }
+  }
+
+  async function renameCategory(oldName: string, newName: string) {
+    setCategoryBusy(true)
+    try {
+      await replaceTaskCategory(oldName, newName)
+      const nextCategories = categories.map((category) => category === oldName ? newName : category)
+      setCategories(await saveCategories(nextCategories))
+      setTasks((current) => current.map((task) => task.category === oldName ? { ...task, category: newName } : task))
+      if (categoryFilter === oldName) setCategoryFilter(newName)
+      if (editingTask?.category === oldName) setEditingTask({ ...editingTask, category: newName })
+    } finally {
+      setCategoryBusy(false)
+    }
+  }
+
+  async function removeCategory(name: string) {
+    setCategoryBusy(true)
+    try {
+      await replaceTaskCategory(name, DEFAULT_CATEGORY)
+      setCategories(await saveCategories(categories.filter((category) => category !== name)))
+      setTasks((current) => current.map((task) => task.category === name ? { ...task, category: DEFAULT_CATEGORY } : task))
+      if (categoryFilter === name) setCategoryFilter('all')
+      if (editingTask?.category === name) setEditingTask({ ...editingTask, category: DEFAULT_CATEGORY })
+    } finally {
+      setCategoryBusy(false)
+    }
+  }
 
   function selectDate(dateKey: string) {
     setSelectedDate(dateKey)
@@ -190,7 +238,14 @@ export default function App() {
           <>
             <div className="planner-grid">
               <Calendar month={visibleMonth} selectedDate={selectedDate} tasks={tasks} onMonthChange={setVisibleMonth} onSelectDate={selectDate} />
-              <TaskForm selectedDate={selectedDate} editingTask={editingTask} onSubmit={submitTask} onCancel={() => setEditingTask(null)} />
+              <TaskForm
+                selectedDate={selectedDate}
+                editingTask={editingTask}
+                categories={categories}
+                onManageCategories={() => setCategoryManagerOpen(true)}
+                onSubmit={submitTask}
+                onCancel={() => setEditingTask(null)}
+              />
             </div>
 
             <TaskList
@@ -229,6 +284,16 @@ export default function App() {
       </main>
 
       <footer><span>Made for full days &amp; blue skies.</span><span>Chapel Hill, North Carolina</span></footer>
+      {categoryManagerOpen && (
+        <CategoryManager
+          categories={categories}
+          busy={categoryBusy}
+          onAdd={addCategory}
+          onRename={renameCategory}
+          onDelete={removeCategory}
+          onClose={() => setCategoryManagerOpen(false)}
+        />
+      )}
       <PlannerChat session={session} tasks={tasks} />
     </div>
   )

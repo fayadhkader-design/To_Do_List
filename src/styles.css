@@ -149,6 +149,9 @@ h1 em { color: var(--carolina); font-style: italic; }
 }
 .task-form input, .task-form select { height: 43px; padding: 0 12px; }
 .task-form textarea { padding: 12px; resize: vertical; line-height: 1.5; }
+.category-label-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.category-label-row button { border: 0; background: transparent; color: #337bab; font-size: 9px; font-weight: 700; letter-spacing: .04em; text-transform: none; }
+.category-label-row button:hover { text-decoration: underline; }
 .form-row { display: grid; grid-template-columns: 1.2fr .8fr; gap: 12px; }
 .form-error { margin: 12px 0 0; color: #a33c32; font-size: 12px; }
 .form-actions { display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-top: 23px; }
@@ -315,6 +318,27 @@ h1 em { color: var(--carolina); font-style: italic; }
 .chat-form button:disabled { opacity: .35; cursor: not-allowed; }
 .chat-note { margin: 9px 20px 15px; color: var(--muted); text-align: center; font-size: 9px; }
 
+.category-backdrop { position: fixed; inset: 0; z-index: 35; display: grid; place-items: center; padding: 20px; background: rgba(19,41,75,.42); backdrop-filter: blur(4px); }
+.category-modal { width: min(100%, 540px); max-height: min(720px, 90vh); overflow-y: auto; padding: 30px; background: var(--paper); border: 1px solid var(--line); box-shadow: 10px 10px 0 var(--carolina), 0 28px 70px rgba(19,41,75,.25); }
+.category-modal > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
+.category-modal h2 { margin: 0; color: var(--navy); font-family: 'Libre Caslon Display', Georgia, serif; font-size: 35px; font-weight: 400; }
+.category-add { margin: 24px 0 18px; }
+.category-add label { color: var(--navy); font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.category-add > div { display: grid; grid-template-columns: 1fr auto; gap: 10px; margin-top: 7px; }
+.category-add input, .category-row input { min-width: 0; height: 44px; padding: 0 12px; border: 1px solid var(--line); border-radius: 0; background: #fbfaf6; }
+.category-add .primary-button { min-height: 44px; }
+.category-error { padding: 10px 12px; background: #f8e8e5; color: #8c332c; font-size: 11px; }
+.category-list { display: grid; gap: 8px; }
+.category-row { min-height: 52px; padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 1px solid var(--line); background: #fbfaf6; }
+.category-row > span { display: flex; align-items: center; gap: 10px; color: var(--navy); font-family: 'Libre Caslon Display', Georgia, serif; font-size: 18px; }
+.category-row > span i { width: 10px; height: 10px; border-radius: 50%; background: var(--carolina); box-shadow: 2px 2px 0 var(--navy); }
+.category-row > div { display: flex; gap: 4px; }
+.category-row button { padding: 6px 8px; border: 0; background: transparent; color: #337bab; font-size: 9px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.category-row .delete-button { color: #a5534b; }
+.category-row button:disabled { opacity: .45; cursor: wait; }
+.category-row form { width: 100%; display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 5px; }
+.category-help { margin: 18px 0 0; color: var(--muted); font-size: 10px; line-height: 1.5; }
+
 footer { display: flex; justify-content: space-between; padding: 28px clamp(24px, 6vw, 96px); background: var(--navy); color: rgba(255,255,255,.65); font-size: 10px; text-transform: uppercase; letter-spacing: .14em; }
 
 @media (max-width: 980px) {
@@ -369,6 +393,12 @@ footer { display: flex; justify-content: space-between; padding: 28px clamp(24px
   .chat-launcher { right: 16px; bottom: 15px; padding-right: 12px; }
   .chat-launcher > span:last-child { display: none; }
   .chat-panel { width: 100%; }
+  .category-backdrop { padding: 10px; }
+  .category-modal { padding: 24px 16px; }
+  .category-modal h2 { font-size: 30px; }
+  .category-row { align-items: flex-start; flex-direction: column; }
+  .category-row form { grid-template-columns: 1fr auto; }
+  .category-row form input { grid-column: 1 / -1; width: 100%; }
 }
 
 @media (prefers-reduced-motion: reduce) {
