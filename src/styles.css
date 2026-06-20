@@ -308,6 +308,11 @@ h1 em { color: var(--carolina); font-style: italic; }
 .chat-close { align-self: start; width: 34px; height: 34px; border: 1px solid var(--line); border-radius: 50%; background: transparent; color: var(--muted); font-size: 22px; line-height: 1; }
 .chat-messages { padding: 22px; overflow-y: auto; background: repeating-linear-gradient(0deg, transparent 0 35px, rgba(86,160,210,.075) 35px 36px); }
 .chat-message { width: fit-content; max-width: 88%; margin-bottom: 13px; padding: 12px 14px; font-size: 13px; line-height: 1.6; white-space: pre-wrap; }
+.chat-message p { margin: 0 0 10px; }
+.chat-message p:last-child { margin-bottom: 0; }
+.chat-message ul { margin: 7px 0 10px; padding-left: 20px; }
+.chat-message li { margin: 4px 0; }
+.chat-message strong { color: var(--navy); font-weight: 700; }
 .chat-message.assistant { border: 1px solid var(--line); background: var(--paper); color: var(--ink); box-shadow: 3px 3px 0 rgba(86,160,210,.22); }
 .chat-message.user { margin-left: auto; background: var(--navy); color: white; }
 .chat-message.thinking { color: var(--muted); font-style: italic; }

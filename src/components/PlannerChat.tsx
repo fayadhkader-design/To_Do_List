@@ -18,6 +18,37 @@ const STARTERS = [
   'What can I move if I feel overwhelmed?',
 ]
 
+function renderInlineMarkdown(text: string) {
+  return text.split(/(\*\*[^*]+\*\*)/g).map((part, index) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={`${part}-${index}`}>{part.slice(2, -2)}</strong>
+    }
+    return part
+  })
+}
+
+function FormattedMessage({ content }: { content: string }) {
+  const blocks = content.trim().split(/\n\s*\n/)
+  return (
+    <>
+      {blocks.map((block, blockIndex) => {
+        const lines = block.split('\n').map((line) => line.trim()).filter(Boolean)
+        const isList = lines.length > 0 && lines.every((line) => /^[-*]\s+/.test(line))
+        if (isList) {
+          return (
+            <ul key={blockIndex}>
+              {lines.map((line, lineIndex) => (
+                <li key={lineIndex}>{renderInlineMarkdown(line.replace(/^[-*]\s+/, ''))}</li>
+              ))}
+            </ul>
+          )
+        }
+        return <p key={blockIndex}>{lines.map((line, lineIndex) => <span key={lineIndex}>{renderInlineMarkdown(line)}{lineIndex < lines.length - 1 && <br />}</span>)}</p>
+      })}
+    </>
+  )
+}
+
 export function PlannerChat({ session, tasks }: PlannerChatProps) {
   const [open, setOpen] = useState(false)
   const [input, setInput] = useState('')
@@ -92,7 +123,7 @@ export function PlannerChat({ session, tasks }: PlannerChatProps) {
             <div className="chat-messages" aria-live="polite">
               {messages.map((message, index) => (
                 <div className={`chat-message ${message.role}`} key={`${message.role}-${index}`}>
-                  {message.content}
+                  {message.role === 'assistant' ? <FormattedMessage content={message.content} /> : message.content}
                 </div>
               ))}
               {messages.length === 1 && (
